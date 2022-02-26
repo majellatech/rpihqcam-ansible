@@ -1,0 +1,4 @@
+[Unit]
+Description=High Quality Camera Module viewfinder
+[Service]
+ExecStart=libcamera-hello -t 0 --width 1920 --height 1080 --brightness 0.09

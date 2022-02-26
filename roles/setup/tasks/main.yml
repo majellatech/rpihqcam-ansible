@@ -1,0 +1,64 @@
+---
+- name: Set authorized key taken from file
+  ansible.posix.authorized_key:
+    user: pi
+    state: present
+    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
+
+- name: Set keyboard layout
+  ansible.builtin.copy:
+    src: files/keyboard
+    dest: /etc/default/keyboard
+
+- name: Set clock to CEST
+  community.general.timezone:
+    name: Europe/Amsterdam
+
+- name: Set WiFi country
+  ansible.builtin.command: raspi-config nonint do_wifi_country NL
+
+- name: Disable Bluetooth
+  ansible.builtin.blockinfile:
+    path: /boot/config.txt
+    insertbefore: BOF
+    block: |
+      dtoverlay=disable-bt
+      disable_splash=1
+      boot_delay=0
+
+- name: Update packages
+  ansible.builtin.apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Install systemd camera service
+  ansible.builtin.copy:
+    src: files/hqcameramodule.service
+    dest: /lib/systemd/system/
+
+- name: Enable systemd camera service
+  ansible.builtin.systemd:
+    enabled: yes
+    name: hqcameramodule
+
+- name: Install systemd camera service trigger
+  ansible.builtin.copy:
+    src: files/cameraavailable.path
+    dest: /lib/systemd/system/
+
+- name: Enable systemd camera service trigger
+  ansible.builtin.systemd:
+    enabled: yes
+    name: cameraavailable.path
+
+- name: Disable SSH password authentication
+  replace:
+    path: /etc/ssh/sshd_config
+    regexp: '^#PasswordAuthentication yes$'
+    replace: 'PasswordAuthentication no'
+
+- name: Disable SSH X11Forwarding
+  replace:
+    path: /etc/ssh/sshd_config
+    regexp: '^X11Forwarding yes$'
+    replace: 'X11Forwarding no'

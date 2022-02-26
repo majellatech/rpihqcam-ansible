@@ -1,0 +1,7 @@
+[Unit]
+Description="Monitor existence of /dev/video0 and start viewfinder when available."
+[Path]
+PathExists=/dev/video0
+Unit=hqcameramodule.service
+[Install]
+WantedBy=multi-user.target
